@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="IP2RegionMaker.Test/IP2RegionMaker.Test.csproj" />
+  <Project Path="IP2RegionMaker/IP2RegionMaker.csproj" />
+</Solution>
