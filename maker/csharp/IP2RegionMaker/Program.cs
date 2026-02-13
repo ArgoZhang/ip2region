@@ -1,6 +1,10 @@
-﻿using IP2RegionMaker.XDB;
-using System.Diagnostics;
+// Copyright 2025 The Ip2Region Authors. All rights reserved.
+// Use of this source code is governed by a Apache2.0-style
+// license that can be found in the LICENSE file.
+// Updated by Argo Zhang <argo@live.ca> at 2026/02/13
 
+using IP2RegionMaker.XDB;
+using System.Diagnostics;
 
 string srcFile = "", dstFile = "";
 IndexPolicy indexPolicy = IndexPolicy.VectorIndexPolicy;
@@ -37,7 +41,7 @@ for (int i = 0; i < args.Length; i++)
             dstFile = value;
             break;
         case "--index":
-            var flag = Enum.TryParse<IndexPolicy>(value, out indexPolicy);
+            var flag = Enum.TryParse(value, out indexPolicy);
             Console.WriteLine("parse policy failed {arg}", arg);
             break;
     }
@@ -45,17 +49,17 @@ for (int i = 0; i < args.Length; i++)
 
 Console.WriteLine(srcFile);
 
-if (string.IsNullOrEmpty(srcFile)||string.IsNullOrEmpty(dstFile))
+if (string.IsNullOrEmpty(srcFile) || string.IsNullOrEmpty(dstFile))
 {
     PrintHelp();
     return;
 }
 
 
-Stopwatch stopwatch = new Stopwatch();
+var stopwatch = new Stopwatch();
 stopwatch.Start();
 
-Maker maker = new Maker(IndexPolicy.VectorIndexPolicy, srcFile, dstFile);
+var maker = new Maker(IndexPolicy.VectorIndexPolicy, srcFile, dstFile);
 maker.Init();
 maker.Build();
 
@@ -63,7 +67,7 @@ stopwatch.Stop();
 Console.WriteLine($"Done, elapsed:{stopwatch.Elapsed.TotalMinutes}m");
 
 
-void PrintHelp()
+static void PrintHelp()
 {
     Console.WriteLine($"ip2region xdb maker");
     Console.WriteLine("dotnet IP2RegionMaker.dll [command options]");

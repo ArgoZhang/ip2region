@@ -1,77 +1,76 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+// Copyright 2025 The Ip2Region Authors. All rights reserved.
+// Use of this source code is governed by a Apache2.0-style
+// license that can be found in the LICENSE file.
+// Updated by Argo Zhang <argo@live.ca> at 2026/02/13
+
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace IP2RegionMaker.XDB
+namespace IP2RegionMaker.XDB;
+
+public static class Util
 {
-    public static class Util
+    public static uint IpAddressToUInt32(string ipAddress)
     {
-        public static uint IpAddressToUInt32(string ipAddress)
+        var address = IPAddress.Parse(ipAddress);
+        byte[] bytes = address.GetAddressBytes();
+        Array.Reverse(bytes);
+        return BitConverter.ToUInt32(bytes, 0);
+    }
+
+    public static string UInt32ToIpAddress(uint ipAddress)
+    {
+        byte[] bytes = BitConverter.GetBytes(ipAddress);
+        Array.Reverse(bytes);
+        return new IPAddress(bytes).ToString();
+    }
+
+    public static Segment GetSegment(string line)
+    {
+        var ps = line.Split("|", 3);
+
+        if (ps.Length != 3)
         {
-            var address = IPAddress.Parse(ipAddress);
-            byte[] bytes = address.GetAddressBytes();
-            Array.Reverse(bytes);
-            return BitConverter.ToUInt32(bytes, 0);
+            throw new ArgumentException($"invalid ip segment line {line}");
         }
 
-        public static string UInt32ToIpAddress(uint ipAddress)
+        var sip = Util.IpAddressToUInt32(ps[0]);
+        var eip = Util.IpAddressToUInt32(ps[1]);
+
+        if (sip > eip)
         {
-            byte[] bytes = BitConverter.GetBytes(ipAddress);
-            Array.Reverse(bytes);
-            return new IPAddress(bytes).ToString();
+            throw new ArgumentException($"start ip {ps[0]} should not be greater than end ip {ps[1]}");
         }
 
-        public static Segment GetSegment(string line)
+        if (string.IsNullOrEmpty(ps[2]))
         {
-            var ps = line.Split("|", 3);
-
-            if (ps.Length != 3)
-            {
-                throw new ArgumentException($"invalid ip segment line {line}");
-            }
-
-            var sip = Util.IpAddressToUInt32(ps[0]);
-            var eip = Util.IpAddressToUInt32(ps[1]);
-
-            if (sip > eip)
-            {
-                throw new ArgumentException($"start ip {ps[0]} should not be greater than end ip {ps[1]}");
-            }
-
-            if (string.IsNullOrEmpty(ps[2]))
-            {
-                throw new ArgumentException($"empty region info in segment line {line}");
-            }
-
-            return new Segment
-            {
-                StartIP = sip,
-                EndIP = eip,
-                Region = ps[2],
-            };
+            throw new ArgumentException($"empty region info in segment line {line}");
         }
 
-        public static void CheckSegments(List<Segment> segments)
+        return new Segment
         {
-            Segment? last = null;
+            StartIP = sip,
+            EndIP = eip,
+            Region = ps[2],
+        };
+    }
 
-            foreach (var seg in segments)
+    public static void CheckSegments(List<Segment> segments)
+    {
+        Segment? last = null;
+
+        foreach (var seg in segments)
+        {
+            if (seg.StartIP > seg.EndIP)
             {
-                if (seg.StartIP > seg.EndIP)
-                {
-                    throw new ArgumentException($"segment `{seg}`: start ip should not be greater than end ip");
-                }
-
-                if (last != null && last.EndIP + 1 != seg.StartIP)
-                {
-                    throw new ArgumentException($"discontinuous data segment: last.eip+1({seg.StartIP}) != seg.sip({seg.EndIP},#{seg})");
-                }
-
-                last = seg;
+                throw new ArgumentException($"segment `{seg}`: start ip should not be greater than end ip");
             }
+
+            if (last != null && last.EndIP + 1 != seg.StartIP)
+            {
+                throw new ArgumentException($"discontinuous data segment: last.eip+1({seg.StartIP}) != seg.sip({seg.EndIP},#{seg})");
+            }
+
+            last = seg;
         }
     }
 }
